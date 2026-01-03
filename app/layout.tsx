@@ -25,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     // 👇 KEY FIX: PASTE YOUR ACTUAL 'pk_test_...' KEY INSIDE THE QUOTES BELOW
-    <ClerkProvider publishableKey="pk_test_YOUR_ACTUAL_LONG_KEY_HERE">
+    <ClerkProvider publishableKey="pk_test_dGhvcm91Z2gtcmVkZmlzaC00Ny5jbGVyay5hY2NvdW50cy5kZXYk">
       <html lang="en">
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
