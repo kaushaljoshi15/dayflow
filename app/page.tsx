@@ -1,10 +1,14 @@
 // File: app/page.tsx
 import { auth } from '@clerk/nextjs/server'
 import { SignInButton } from '@clerk/nextjs'
-// ✅ Correct import path for the utils folder
-import { createAdminClient } from '@/utils/supabase/admin' 
 // ✅ Correct import path (now that you renamed the file to actions.ts)
 import { checkIn, checkOut } from '@/app/actions' 
+
+type AttendanceRecord = {
+  id: number
+  check_in: string
+  check_out: string | null
+}
 
 export default async function Home() {
   const { userId } = await auth() // ✅ Added 'await' which is required in newer Clerk versions
@@ -25,15 +29,9 @@ export default async function Home() {
   }
 
   // --- STATE 2: LOGGED IN (DASHBOARD) ---
-  const supabase = createAdminClient()
-  const today = new Date().toISOString().split('T')[0]
-  
-  const { data: todayRecord } = await supabase
-    .from('attendance')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('date', today)
-    .single()
+  // Database removed - using placeholder data
+  // When database is re-implemented, replace null with actual query result
+  const todayRecord = null as AttendanceRecord | null
 
   return (
     <main className="min-h-screen bg-gray-50 p-8">
@@ -47,36 +45,45 @@ export default async function Home() {
           <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">Mark Attendance</h3>
             
-            {todayRecord?.check_in ? (
-              todayRecord.check_out ? (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-center">
-                  <p className="text-green-800 font-bold text-xl">✅ Shift Completed</p>
-                  <p className="text-green-600 text-sm mt-1">
-                    Clocked out at {new Date(todayRecord.check_out).toLocaleTimeString()}
-                  </p>
-                </div>
-              ) : (
+            {(() => {
+              if (!todayRecord || !todayRecord.check_in) {
+                return (
+                  <form action={checkIn}>
+                    <button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg transition shadow-md text-lg">
+                      Clock In ⏱️
+                    </button>
+                  </form>
+                )
+              }
+              
+              const record = todayRecord
+              if (record.check_out) {
+                return (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-center">
+                    <p className="text-green-800 font-bold text-xl">✅ Shift Completed</p>
+                    <p className="text-green-600 text-sm mt-1">
+                      Clocked out at {new Date(record.check_out).toLocaleTimeString()}
+                    </p>
+                  </div>
+                )
+              }
+              
+              return (
                 <div className="space-y-4">
                   <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
                      <p className="text-blue-800 font-medium">
-                       Clocked In at {new Date(todayRecord.check_in).toLocaleTimeString()}
+                       Clocked In at {new Date(record.check_in).toLocaleTimeString()}
                      </p>
                   </div>
                   {/* Using bind to pass the ID to the server action */}
-                  <form action={checkOut.bind(null, todayRecord.id)}>
+                  <form action={checkOut.bind(null, record.id)}>
                     <button className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 rounded-lg transition shadow-md">
                       Clock Out 🛑
                     </button>
                   </form>
                 </div>
               )
-            ) : (
-              <form action={checkIn}>
-                <button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-lg transition shadow-md text-lg">
-                  Clock In ⏱️
-                </button>
-              </form>
-            )}
+            })()}
           </div>
 
           <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center items-center text-center">
